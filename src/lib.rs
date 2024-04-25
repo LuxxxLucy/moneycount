@@ -1,24 +1,26 @@
-use sauron::{node, wasm_bindgen, Application, Cmd, Node, Program};
+#![deny(warnings)]
+use app::Model;
+use sauron::Program;
+use wasm_bindgen::prelude::*;
 
-struct App;
+#[macro_use]
+extern crate log;
 
-impl Application for App {
-    type MSG = ();
-
-    fn view(&self) -> Node<()> {
-        node! {
-            <p>
-                "hello"
-            </p>
-        }
-    }
-
-    fn update(&mut self, _msg: ()) -> Cmd<()> {
-        Cmd::none()
-    }
-}
+mod app;
 
 #[wasm_bindgen(start)]
 pub fn main() {
-    Program::mount_to_body(App);
+    console_log::init_with_level(log::Level::Trace).unwrap();
+    #[cfg(feature = "console_error_panic_hook")]
+    {
+        console_error_panic_hook::set_once();
+    }
+    trace!("in main!");
+
+    #[cfg(feature = "with-storage")]
+    Program::mount_to_body(Model::get_from_storage());
+
+    // don't use storage for benchmark
+    #[cfg(not(feature = "with-storage"))]
+    Program::mount_to_body(Model::new());
 }
