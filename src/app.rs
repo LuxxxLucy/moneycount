@@ -11,6 +11,7 @@ pub struct Model {
     value: String,
     column: Column,
     uid: usize,
+    l2r_rate: f64,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
@@ -34,6 +35,28 @@ pub enum Msg {
     UpdateEntry(usize, Column, String),
     ToggleEdit(usize),
     NoOp,
+}
+
+impl Model {
+    fn get_entry_count(&self) -> usize {
+        return self.entries.len();
+    }
+
+    fn get_sum_one_column(&self, col: Column) -> f64 {
+        self.entries
+            .iter()
+            .filter(|entry| entry.column == col)
+            .filter_map(|entry| entry.description.parse::<f64>().ok())
+            .sum()
+    }
+
+    fn get_sum_left(&self) -> f64 {
+        self.get_sum_one_column(Column::Left)
+    }
+
+    fn get_sum_right(&self) -> f64 {
+        self.get_sum_one_column(Column::Right)
+    }
 }
 
 impl Application for Model {
@@ -121,6 +144,7 @@ impl Model {
             value: "".into(),
             column: Column::Left,
             uid: 0,
+            l2r_rate: 5.35,
         }
     }
 
@@ -145,7 +169,7 @@ impl Model {
                     [
                         class("new-item"),
                         id("new-item"),
-                        placeholder("currency 1"),
+                        placeholder("CAD"),
                         autofocus(true),
                         value(self.value.to_string()),
                         on_input(|v: InputEvent| Msg::Update(v.value(), Column::Left)),
@@ -163,7 +187,7 @@ impl Model {
                     [
                         class("new-item"),
                         id("new-item"),
-                        placeholder("currency 2"),
+                        placeholder("RMB"),
                         autofocus(true),
                         value(self.value.to_string()),
                         on_input(|v: InputEvent| Msg::Update(v.value(), Column::Right)),
@@ -183,6 +207,12 @@ impl Model {
 
     fn view_entry(&self, entry: &Entry) -> Node<Msg> {
         let entry_id = entry.id;
+
+        let v = entry.description.parse::<f64>().unwrap_or(0.0);
+        let (left_value, right_value) = match entry.column {
+            Column::Left => (v, v * self.l2r_rate),
+            Column::Right => (v / self.l2r_rate, v),
+        };
         li(
             [
                 class("item"),
@@ -197,14 +227,8 @@ impl Model {
                         [div(
                             [class("entry-row")],
                             [
-                                div([class("entry")], [text(entry.description.to_string())]),
-                                div(
-                                    [class("entry")],
-                                    [text(match entry.column {
-                                        Column::Left => "right ",
-                                        Column::Right => "left ",
-                                    })],
-                                ),
+                                div([class("entry")], [text!("{:.2}", left_value)]),
+                                div([class("entry")], [text!("{:.2}", right_value)]),
                             ],
                         )],
                     )],
@@ -234,14 +258,22 @@ impl Model {
     }
 
     fn view_info(&self) -> Node<Msg> {
-        let entries_left = self.entries.len();
-        let item = if entries_left == 1 { " item" } else { " items" };
+        let entries_count = self.get_entry_count();
 
+        let left_sum = self.get_sum_left();
+        let right_sum = self.get_sum_right();
+        let left_total = left_sum + right_sum / self.l2r_rate;
+        let right_total = left_sum * self.l2r_rate + right_sum;
         footer(
             [class("footer")],
             [span(
-                [class("item-count")],
-                [strong([], [text(entries_left)]), text!(" {} left", item)],
+                [class("result")],
+                [
+                    text!(" {} expense", entries_count),
+                    text!(" CAD {:.2} ", left_total),
+                    text!(" RMB {:.2} ", right_total),
+                    text!(" under current rate {:.2}.", self.l2r_rate),
+                ],
             )],
         )
     }
