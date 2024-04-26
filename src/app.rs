@@ -107,11 +107,21 @@ impl Application for Model {
 
     fn view(&self) -> Node<Msg> {
         div(
-            [class("todomvc-wrapper")],
+            [class("countapp-wrapper")],
             [
                 section(
-                    [class("todoapp")],
-                    [self.view_input(), self.view_entries(), self.view_controls()],
+                    [class("countapp")],
+                    [
+                        self.view_header(),
+                    ]
+                ),
+                section(
+                    [class("countapp")],
+                    [
+                    self.view_entries(),
+                    self.view_input(),
+                    self.view_controls(),
+                    ],
                 ),
                 self.info_footer(),
             ],
@@ -165,7 +175,7 @@ impl Model {
                     ],
                     [],
                 ),
-                ul([class("todo-list")], {
+                ul([class("item-list")], {
                     self.entries
                         .iter()
                         .filter(|entry| match self.visibility {
@@ -197,17 +207,42 @@ impl Model {
             )],
         )
     }
-
-    fn view_input(&self) -> Node<Msg> {
+    fn view_header(&self) -> Node<Msg> {
         header(
             [class("header")],
             [
-                h1([], [text("todos")]),
+                h1([], [text("Counter")]),
+            ]
+        )
+    }
+
+    fn view_input(&self) -> Node<Msg> {
+        div(
+            [class("input-row")],
+            [
                 input(
                     [
-                        class("new-todo"),
-                        id("new-todo"),
-                        placeholder("What needs to be done?"),
+                        class("new-item"),
+                        id("new-item"),
+                        placeholder("currency 1"),
+                        autofocus(true),
+                        value(self.value.to_string()),
+                        on_input(|v: InputEvent| Msg::Update(v.value())),
+                        on_keypress(|event: KeyboardEvent| {
+                            if event.key() == "Enter" {
+                                Msg::Add
+                            } else {
+                                Msg::NoOp
+                            }
+                        }),
+                    ],
+                    [],
+                ),
+                input(
+                    [
+                        class("new-item"),
+                        id("new-item"),
+                        placeholder("currency 2"),
                         autofocus(true),
                         value(self.value.to_string()),
                         on_input(|v: InputEvent| Msg::Update(v.value())),
@@ -290,7 +325,7 @@ impl Model {
             [class("footer")],
             [
                 span(
-                    [class("todo-count")],
+                    [class("item-count")],
                     [strong([], [text(entries_left)]), text!(" {} left", item)],
                 ),
                 ul(
