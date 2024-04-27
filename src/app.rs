@@ -163,7 +163,7 @@ impl Model {
 
     fn view_input(&self) -> Node<Msg> {
         div(
-            [class("input-row")],
+            [class("entry-row")],
             [
                 input(
                     [
@@ -233,25 +233,50 @@ impl Model {
                         )],
                     )],
                 ),
-                input(
+                div(
+                    [class("entry-row")],
                     [
-                        class("edit"),
-                        r#type("text"),
-                        hidden(!entry.editing),
-                        value(&entry.description),
-                        on_input(move |input: InputEvent| {
-                            Msg::UpdateEntry(entry_id, Column::Left, input.value())
-                        }),
-                        on_blur(move |_| Msg::EditingEntry(entry_id, false)),
-                        on_keypress(move |event: KeyboardEvent| {
-                            if event.key_code() == 13 {
-                                Msg::EditingEntry(entry_id, false)
-                            } else {
-                                Msg::NoOp
-                            }
-                        }),
+                        input(
+                            [
+                                class("edit"),
+                                r#type("text"),
+                                hidden(!entry.editing),
+                                value(&entry.description),
+                                on_input(move |input: InputEvent| {
+                                    Msg::UpdateEntry(entry_id, Column::Left, input.value())
+                                }),
+                                on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                on_keypress(move |event: KeyboardEvent| {
+                                    if event.key_code() == 13 {
+                                        Msg::EditingEntry(entry_id, false)
+                                    } else {
+                                        Msg::NoOp
+                                    }
+                                }),
+                            ],
+                            [],
+                        ),
+                        input(
+                            [
+                                class("edit"),
+                                r#type("text"),
+                                hidden(!entry.editing),
+                                value(&entry.description),
+                                on_input(move |input: InputEvent| {
+                                    Msg::UpdateEntry(entry_id, Column::Left, input.value())
+                                }),
+                                on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                on_keypress(move |event: KeyboardEvent| {
+                                    if event.key_code() == 13 {
+                                        Msg::EditingEntry(entry_id, false)
+                                    } else {
+                                        Msg::NoOp
+                                    }
+                                }),
+                            ],
+                            [],
+                        ),
                     ],
-                    [],
                 ),
             ],
         )
