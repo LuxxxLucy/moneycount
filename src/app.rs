@@ -227,56 +227,59 @@ impl Model {
                         [div(
                             [class("entry-row")],
                             [
-                                div([class("entry")], [text!("{:.2}", left_value)]),
-                                div([class("entry")], [text!("{:.2}", right_value)]),
+                                div(
+                                    [class("entry")],
+                                    [input(
+                                        [
+                                            class("entry"),
+                                            value(format!("{:.2}", left_value)),
+                                            on_input(move |input: InputEvent| {
+                                                Msg::UpdateEntry(
+                                                    entry_id,
+                                                    Column::Left,
+                                                    input.value(),
+                                                )
+                                            }),
+                                            on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                            on_keypress(move |event: KeyboardEvent| {
+                                                if event.key_code() == 13 {
+                                                    Msg::EditingEntry(entry_id, false)
+                                                } else {
+                                                    Msg::NoOp
+                                                }
+                                            }),
+                                        ],
+                                        [],
+                                    )],
+                                ),
+                                div(
+                                    [class("entry")],
+                                    [input(
+                                        [
+                                            class("entry"),
+                                            value(format!("{:.2}", right_value)),
+                                            on_input(move |input: InputEvent| {
+                                                Msg::UpdateEntry(
+                                                    entry_id,
+                                                    Column::Left,
+                                                    input.value(),
+                                                )
+                                            }),
+                                            on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                            on_keypress(move |event: KeyboardEvent| {
+                                                if event.key_code() == 13 {
+                                                    Msg::EditingEntry(entry_id, false)
+                                                } else {
+                                                    Msg::NoOp
+                                                }
+                                            }),
+                                        ],
+                                        [],
+                                    )],
+                                ),
                             ],
                         )],
                     )],
-                ),
-                div(
-                    [class("entry-row")],
-                    [
-                        input(
-                            [
-                                class("edit"),
-                                r#type("text"),
-                                hidden(!entry.editing),
-                                value(&entry.description),
-                                on_input(move |input: InputEvent| {
-                                    Msg::UpdateEntry(entry_id, Column::Left, input.value())
-                                }),
-                                on_blur(move |_| Msg::EditingEntry(entry_id, false)),
-                                on_keypress(move |event: KeyboardEvent| {
-                                    if event.key_code() == 13 {
-                                        Msg::EditingEntry(entry_id, false)
-                                    } else {
-                                        Msg::NoOp
-                                    }
-                                }),
-                            ],
-                            [],
-                        ),
-                        input(
-                            [
-                                class("edit"),
-                                r#type("text"),
-                                hidden(!entry.editing),
-                                value(&entry.description),
-                                on_input(move |input: InputEvent| {
-                                    Msg::UpdateEntry(entry_id, Column::Left, input.value())
-                                }),
-                                on_blur(move |_| Msg::EditingEntry(entry_id, false)),
-                                on_keypress(move |event: KeyboardEvent| {
-                                    if event.key_code() == 13 {
-                                        Msg::EditingEntry(entry_id, false)
-                                    } else {
-                                        Msg::NoOp
-                                    }
-                                }),
-                            ],
-                            [],
-                        ),
-                    ],
                 ),
             ],
         )

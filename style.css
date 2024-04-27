@@ -94,6 +94,13 @@ body {
 .entry-row .entry {
     flex: 1;
     text-align: right;
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    border: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .input-row {
@@ -135,38 +142,12 @@ body {
     border-bottom: none;
 }
 
-.item-list li.editing {
-    border-bottom: none;
-    padding: 0;
-}
-
-.item-list li.editing .edit {
-    display: block;
-    width: 50%;
-    padding: 0px 0px;
-    padding: 15px 10px 15px 0px;
-    line-height: 1.2;
-    margin: 0 0 0 0px;
-    text-align: right;
-    font-size: inherit;
-    font-family: inherit;
-    font-weight: inherit;
-}
-
-.item-list li.editing .view {
-    display: none;
-}
-
-.item-list li label {
+.item-list li {
     word-break: break-all;
     padding: 15px 10px 15px 0px;
     display: block;
     line-height: 1.2;
     transition: color 0.4s;
-}
-
-.item-list li .edit {
-    display: none;
 }
 
 .item-list li.editing:last-child {
