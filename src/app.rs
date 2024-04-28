@@ -30,10 +30,9 @@ struct Entry {
 
 pub enum Msg {
     Add,
-    EditingEntry(usize, bool),
     Update(String, Column),
     UpdateEntry(usize, Column, String),
-    ToggleEdit(usize),
+    UpdateRate(String),
     NoOp,
 }
 
@@ -59,23 +58,14 @@ impl Model {
     }
 }
 
-impl Application for Model {
-    type MSG = Msg;
-
-    fn update(&mut self, msg: Msg) -> Cmd<Msg> {
+impl Application<Msg> for Model {
+    fn update(&mut self, msg: Msg) -> Cmd<Self, Msg> {
         match msg {
             Msg::Add => {
                 self.entries
                     .push(Entry::new(&self.value, self.column.clone(), self.uid));
                 self.uid += 1;
                 self.value = "".to_string()
-            }
-            Msg::EditingEntry(id, is_editing) => {
-                self.entries.iter_mut().for_each(|entry| {
-                    if entry.id == id {
-                        entry.editing = is_editing;
-                    }
-                });
             }
             Msg::Update(val, col) => {
                 self.value = val;
@@ -89,12 +79,8 @@ impl Application for Model {
                     }
                 });
             }
-            Msg::ToggleEdit(id) => {
-                self.entries.iter_mut().for_each(|entry| {
-                    if entry.id == id {
-                        entry.editing = !entry.editing;
-                    }
-                });
+            Msg::UpdateRate(rate) => {
+                self.l2r_rate = rate.parse::<f64>().unwrap_or(5.35);
             }
             Msg::NoOp => {}
         }
@@ -120,7 +106,7 @@ impl Application for Model {
     fn stylesheet() -> Vec<String> {
         vec![jss! {
             "body": {
-                font_family: "Fira Sans, Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter, monospace",
+                font_family: "Roboto, Fira Sans, sans-serif",
             }
         }]
     }
@@ -158,7 +144,7 @@ impl Model {
     }
 
     fn view_header(&self) -> Node<Msg> {
-        header([class("header")], [h1([], [text("Counter")])])
+        header([class("header")], [h1([], [text("Dual Count")])])
     }
 
     fn view_input(&self) -> Node<Msg> {
@@ -171,7 +157,10 @@ impl Model {
                         id("new-item"),
                         placeholder("CAD"),
                         autofocus(true),
-                        value(self.value.to_string()),
+                        value(match self.column {
+                            Column::Left => self.value.to_string(),
+                            Column::Right => "".to_string(),
+                        }),
                         on_input(|v: InputEvent| Msg::Update(v.value(), Column::Left)),
                         on_keypress(|event: KeyboardEvent| {
                             if event.key() == "Enter" {
@@ -189,7 +178,10 @@ impl Model {
                         id("new-item"),
                         placeholder("RMB"),
                         autofocus(true),
-                        value(self.value.to_string()),
+                        value(match self.column {
+                            Column::Right => self.value.to_string(),
+                            Column::Left => "".to_string(),
+                        }),
                         on_input(|v: InputEvent| Msg::Update(v.value(), Column::Right)),
                         on_keypress(|event: KeyboardEvent| {
                             if event.key() == "Enter" {
@@ -219,69 +211,57 @@ impl Model {
                 classes_flag([("editing", entry.editing)]),
                 key(format!("item-{}", entry.id)),
             ],
-            [
-                div(
-                    [class("view")],
-                    [label(
-                        [on_doubleclick(move |_| Msg::ToggleEdit(entry_id))],
-                        [div(
-                            [class("entry-row")],
-                            [
-                                div(
-                                    [class("entry")],
-                                    [input(
-                                        [
-                                            class("entry"),
-                                            value(format!("{:.2}", left_value)),
-                                            on_input(move |input: InputEvent| {
-                                                Msg::UpdateEntry(
-                                                    entry_id,
-                                                    Column::Left,
-                                                    input.value(),
-                                                )
-                                            }),
-                                            on_blur(move |_| Msg::EditingEntry(entry_id, false)),
-                                            on_keypress(move |event: KeyboardEvent| {
-                                                if event.key_code() == 13 {
-                                                    Msg::EditingEntry(entry_id, false)
-                                                } else {
-                                                    Msg::NoOp
-                                                }
-                                            }),
-                                        ],
-                                        [],
-                                    )],
-                                ),
-                                div(
-                                    [class("entry")],
-                                    [input(
-                                        [
-                                            class("entry"),
-                                            value(format!("{:.2}", right_value)),
-                                            on_input(move |input: InputEvent| {
-                                                Msg::UpdateEntry(
-                                                    entry_id,
-                                                    Column::Left,
-                                                    input.value(),
-                                                )
-                                            }),
-                                            on_blur(move |_| Msg::EditingEntry(entry_id, false)),
-                                            on_keypress(move |event: KeyboardEvent| {
-                                                if event.key_code() == 13 {
-                                                    Msg::EditingEntry(entry_id, false)
-                                                } else {
-                                                    Msg::NoOp
-                                                }
-                                            }),
-                                        ],
-                                        [],
-                                    )],
-                                ),
-                            ],
-                        )],
-                    )],
-                ),
-            ],
+            [div(
+                [class("view")],
+                [div(
+                    [class("entry-row")],
+                    [
+                        div(
+                            [class("entry")],
+                            [input(
+                                [
+                                    class("entry"),
+                                    value(format!("{:.2}", left_value)),
+                                    // value(format!("{}", left_value)),
+                                    on_input(move |input: InputEvent| {
+                                        Msg::UpdateEntry(entry_id, Column::Left, input.value())
+                                    }),
+                                    // on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                    // on_keypress(move |event: KeyboardEvent| {
+                                    //     if event.key_code() == 13 {
+                                    //         Msg::EditingEntry(entry_id, false)
+                                    //     } else {
+                                    //         Msg::NoOp
+                                    //     }
+                                    // }),
+                                ],
+                                [],
+                            )],
+                        ),
+                        div(
+                            [class("entry")],
+                            [input(
+                                [
+                                    class("entry"),
+                                    value(format!("{:.2}", right_value)),
+                                    on_input(move |input: InputEvent| {
+                                        Msg::UpdateEntry(entry_id, Column::Right, input.value())
+                                    }),
+                                    // on_blur(move |_| Msg::EditingEntry(entry_id, false)),
+                                    // on_keypress(move |event: KeyboardEvent| {
+                                    //     if event.key_code() == 13 {
+                                    //         Msg::EditingEntry(entry_id, false)
+                                    //     } else {
+                                    //         Msg::NoOp
+                                    //     }
+                                    // }),
+                                ],
+                                [],
+                            )],
+                        ),
+                    ],
+                )],
+            )],
         )
     }
 
@@ -297,10 +277,21 @@ impl Model {
             [span(
                 [class("result")],
                 [
-                    text!(" {} expense", entries_count),
+                    text!(" {} expenses", entries_count),
                     text!(" CAD {:.2} ", left_total),
                     text!(" RMB {:.2} ", right_total),
-                    text!(" under current rate {:.2}.", self.l2r_rate),
+                    text!(" under rate "),
+                    input(
+                        [
+                            class("rate"),
+                            id("rate"),
+                            placeholder("CAD"),
+                            autofocus(true),
+                            value(self.l2r_rate.clone()),
+                            on_input(|v: InputEvent| Msg::UpdateRate(v.value())),
+                        ],
+                        [],
+                    ),
                 ],
             )],
         )
@@ -310,7 +301,7 @@ impl Model {
         footer(
             [class("info")],
             [
-                p([], [text("Double-click to edit an entry")]),
+                p([], [text("A simple two column spreadsheet for writing expenses in two currencies (CAD and RMB) side by side.")]),
                 p(
                     [],
                     [
@@ -325,7 +316,7 @@ impl Model {
                                 href("https://github.com/ivanceras/sauron"),
                                 target("_blank"),
                             ],
-                            [text("sauron")],
+                            [text("sauron.")],
                         ),
                     ],
                 ),
